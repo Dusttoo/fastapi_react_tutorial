@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  backend:
+    build: backend
+    ports:
+      - 8000:8000
+    volumes:
+      - ./backend:/usr/src/app
+  db:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_USER: fastapi_react_user
+      POSTGRES_DB: fastapi_react_dev
+      POSTGRES_PASSWORD: password
