@@ -1,11 +1,12 @@
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
-from models import models, schemas
-from api import crud
+from models import Base, Genre, Movie
+from schemas import Genre, GenreBase, Movie, MovieBase
+from crud import get_genre_by_title, get_genres, get_movie, get_movie_by_title, get_movies
 from database import SessionLocal, engine
 
-models.Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -18,37 +19,37 @@ def get_db():
         db.close()
 
 
-@app.post("/movies/", response_model=schemas.Movie)
-def create_movie(movie: schemas.MovieBase, db: Session = Depends(get_db)):
-    db_movie = crud.get_movie_by_title(db, title=movie.title)
+@app.post("/movies/", response_model=Movie)
+def create_movie(movie: MovieBase, db: Session = Depends(get_db)):
+    db_movie = get_movie_by_title(db, title=movie.title)
     if db_movie:
         raise HTTPException(status_code=400, detail="Movie already exists")
-    return crud.create_movie(db=db, movie=movie)
+    return create_movie(db=db, movie=movie)
 
 
-@app.get("/movies/", response_model=list[schemas.Movie])
+@app.get("/movies/", response_model=list[Movie])
 def read_movies(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    movies = crud.get_movies(db, skip=skip, limit=limit)
+    movies = get_movies(db, skip=skip, limit=limit)
     return movies
 
 
-@app.get("/movies/{movie_id}", response_model=schemas.Movie)
+@app.get("/movies/{movie_id}", response_model=Movie)
 def read_movie(movie_id: int, db: Session = Depends(get_db)):
-    db_movie = crud.get_movie(db, movie_id=movie_id)
+    db_movie = get_movie(db, movie_id=movie_id)
     if db_movie is None:
         raise HTTPException(status_code=404, detail="Movie not found")
     return db_movie
 
 
-@app.get("/genres/", response_model=list[schemas.Genre])
+@app.get("/genres/", response_model=list[Genre])
 def read_genres(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    genres = crud.get_genres(db, skip=skip, limit=limit)
+    genres = get_genres(db, skip=skip, limit=limit)
     return genres
 
 
-@app.post("/genres/", response_model=schemas.Genre)
-def create_genre(genre: schemas.GenreBase, db: Session = Depends(get_db)):
-    db_genre = crud.get_genre_by_title(db, title=genre.title)
+@app.post("/genres/", response_model=Genre)
+def create_genre(genre: GenreBase, db: Session = Depends(get_db)):
+    db_genre = get_genre_by_title(db, title=genre.title)
     if db_genre:
         raise HTTPException(status_code=400, detail="Genre already exists")
-    return crud.create_genre(db=db, genre=genre)
+    return create_genre(db=db, genre=genre)
